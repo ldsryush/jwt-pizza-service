@@ -8,6 +8,8 @@ const logger = require('../logger.js');
 
 const orderRouter = express.Router();
 
+let enableChaos = false;
+
 orderRouter.docs = [
   {
     method: 'GET',
@@ -41,6 +43,26 @@ orderRouter.docs = [
     response: { order: { franchiseId: 1, storeId: 1, items: [{ menuId: 1, description: 'Veggie', price: 0.05 }], id: 1 }, jwt: '1111111111' },
   },
 ];
+
+// chaos toggle (admin only)
+orderRouter.put(
+  '/chaos/:state',
+  authRouter.authenticateToken,
+  asyncHandler(async (req, res) => {
+    if (req.user.isRole(Role.Admin)) {
+      enableChaos = req.params.state === 'true';
+    }
+    res.json({ chaos: enableChaos });
+  })
+);
+
+// chaos middleware — randomly fail pizza orders when chaos is enabled
+orderRouter.post('/', (req, res, next) => {
+  if (enableChaos && Math.random() < 0.5) {
+    throw new StatusCodeError('Chaos monkey', 500);
+  }
+  next();
+});
 
 // getMenu
 orderRouter.get(
