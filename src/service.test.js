@@ -28,11 +28,20 @@ describe('Service Tests', () => {
   test('cors headers', async () => {
     const res = await request(app)
       .get('/')
-      .set('Origin', 'http://localhost:3000');
+      .set('Origin', 'https://pizza.pizzasanghwa.click');
     
     expect(res.headers).toHaveProperty('access-control-allow-origin');
+    expect(res.headers['access-control-allow-origin']).toBe('https://pizza.pizzasanghwa.click');
     expect(res.headers).toHaveProperty('access-control-allow-methods');
     expect(res.headers).toHaveProperty('access-control-allow-headers');
     expect(res.headers).toHaveProperty('access-control-allow-credentials');
+  });
+
+  test('cors headers blocked for unknown origin', async () => {
+    const res = await request(app)
+      .get('/')
+      .set('Origin', 'http://malicious-site.com');
+    
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
   });
 });

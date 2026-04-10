@@ -9,15 +9,20 @@ const metrics = require('./metrics.js');
 const logger = require('./logger.js');
 
 const app = express();
+app.disable('x-powered-by');
 app.use(express.json());
 app.use(logger.httpLogger);
 app.use(metrics.requestTracker);
 app.use(setAuthUser);
+const allowedOrigin = 'https://pizza.pizzasanghwa.click';
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  const origin = req.headers.origin;
+  if (origin === allowedOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
   next();
 });
 
@@ -57,7 +62,8 @@ app.use((err, req, res, next) => {
     body: req.body,
     userId: req.user ? req.user.id : undefined,
   });
-  res.status(err.statusCode ?? 500).json({ message: err.message, stack: err.stack });
+  console.error(err.stack);
+  res.status(err.statusCode ?? 500).json({ message: err.message });
   next();
 });
 

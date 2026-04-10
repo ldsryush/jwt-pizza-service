@@ -1,9 +1,16 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const config = require('../config.js');
 const { asyncHandler } = require('../endpointHelper.js');
 const { DB, Role } = require('../database/database.js');
 const metrics = require('../metrics.js');
+
+const loginLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 5, // max 5 login attempts per minute
+  message: { message: 'Too many login attempts, please try again later' },
+});
 
 const authRouter = express.Router();
 
@@ -74,6 +81,7 @@ authRouter.post(
 // login
 authRouter.put(
   '/',
+  loginLimiter,
   asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     try {
